@@ -67,7 +67,7 @@ x-clang-tidy C:/gcc-arm-none-eabi/bin/arm-none-eabi-g++.exe src/main.cpp
 You can pass an alternative config file (e.g. for per-project settings) as an extra argument:
 
 ```sh
-x-clang-tidy C:/gcc-arm-none-eabi/bin/arm-none-eabi-g++.exe src/main.cpp
+x-clang-tidy C:/gcc-arm-none-eabi/bin/arm-none-eabi-g++.exe D:/Projects/you-project/x-clang-tidy.json src/main.cpp
 ```
 
 ---
