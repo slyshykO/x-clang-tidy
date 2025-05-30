@@ -29,7 +29,7 @@ fn main() -> ExitCode {
         }
     };
     if CWD.set(cwd_).is_err() {
-        eprintln!("{}", "Error: can't set CWD");
+        eprintln!("Error: can't set CWD");
         return ExitCode::FAILURE;
     };
     match _main() {
