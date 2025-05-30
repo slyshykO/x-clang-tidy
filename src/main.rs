@@ -1,9 +1,8 @@
 use handlebars::{Handlebars, handlebars_helper};
+use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use std::fs;
 use std::process::{Command, ExitCode, Stdio};
-use once_cell::sync::OnceCell;
-
 
 static CWD: OnceCell<std::path::PathBuf> = OnceCell::new();
 
@@ -162,7 +161,7 @@ fn _main() -> anyhow::Result<()> {
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()
-        .map_err(|e| anyhow::anyhow!("Can't launch `{}`: {}",&config.clang_tidy, e))
+        .map_err(|e| anyhow::anyhow!("Can't launch `{}`: {}", &config.clang_tidy, e))
         .expect("Failed to execute clang-tidy");
 
     std::process::exit(status.code().unwrap_or(1));
