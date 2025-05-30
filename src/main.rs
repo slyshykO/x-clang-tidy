@@ -1,6 +1,11 @@
+use handlebars::{Handlebars, handlebars_helper};
 use serde::Deserialize;
+use std::fs;
 use std::process::{Command, ExitCode, Stdio};
-use std::{env, fs};
+use once_cell::sync::OnceCell;
+
+
+static CWD: OnceCell<std::path::PathBuf> = OnceCell::new();
 
 #[derive(Deserialize)]
 struct Config {
@@ -12,7 +17,22 @@ struct Config {
     filter_args: Option<Vec<String>>,
 }
 
+pub fn cwd() -> &'static std::path::PathBuf {
+    CWD.get().expect("CWD not set")
+}
+
 fn main() -> ExitCode {
+    let cwd_ = match std::env::current_dir() {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{}", e);
+            return ExitCode::FAILURE;
+        }
+    };
+    if CWD.set(cwd_).is_err() {
+        eprintln!("{}", "Error: can't set CWD");
+        return ExitCode::FAILURE;
+    };
     match _main() {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
@@ -40,14 +60,23 @@ fn config_text(additional_path: &[String]) -> anyhow::Result<String> {
 
 fn is_valid_config_path<T: AsRef<str>>(path: T) -> bool {
     let path = path.as_ref();
-    std::path::Path::new(path).exists() && path.ends_with(".json")
+    std::path::Path::new(path).exists() && (path.ends_with(".json") || path.ends_with(".json.hbt"))
 }
+
+// a helper that return env variables
+handlebars_helper!(hb_env: |name: String| {
+    match std::env::var(&name) {
+        Ok(value) => value,
+        Err(e) => format!("{}: {}", name, e),
+    }
+});
 
 fn _main() -> anyhow::Result<()> {
     // Usage: x-clang-tidy <path-to-arm-gcc.exe> <clang-tidy-args...>
-    let args = env::args().collect::<Vec<String>>();
+    let args = std::env::args().collect::<Vec<String>>();
 
     eprintln!("x-clang-tidy: {}", env!("CARGO_PKG_VERSION"));
+    eprintln!("x-clang-tidy cwd: {}", cwd().display());
 
     let gcc_path = args
         .get(1)
@@ -61,11 +90,19 @@ fn _main() -> anyhow::Result<()> {
             .map(|s| s.to_owned())
             .collect::<Vec<_>>();
         v.insert(0, "x-clang-tidy.json".to_string());
+        v.insert(0, "x-clang-tidy.json.hbt".to_string());
         v
     };
 
+    // create the handlebars registry
+    let mut handlebars = Handlebars::new();
+    handlebars.register_helper("env", Box::new(hb_env));
+
     // Read config
-    let config_text = config_text(&conf_additional_path)?;
+    let config_text = {
+        let txt = config_text(&conf_additional_path)?;
+        handlebars.render_template(&txt, &())?
+    };
     let config: Config =
         serde_json::from_str(&config_text).expect("Failed to parse x-clang-tidy.json");
 
@@ -125,6 +162,7 @@ fn _main() -> anyhow::Result<()> {
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()
+        .map_err(|e| anyhow::anyhow!("Can't launch `{}`: {}",&config.clang_tidy, e))
         .expect("Failed to execute clang-tidy");
 
     std::process::exit(status.code().unwrap_or(1));
