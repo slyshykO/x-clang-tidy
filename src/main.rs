@@ -105,7 +105,7 @@ fn _main() -> anyhow::Result<()> {
     let config: Config =
         serde_json::from_str(&config_text).expect("Failed to parse x-clang-tidy.json");
 
-    let mut compiler_extra_args : Vec<String> = Vec::new();
+    let mut compiler_extra_args: Vec<String> = Vec::new();
     // find --target= argument
     if let Some(target_arg) = extra_args.iter().find(|arg| arg.starts_with("--target=")) {
         compiler_extra_args.push(target_arg.clone());
