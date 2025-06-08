@@ -105,8 +105,18 @@ fn _main() -> anyhow::Result<()> {
     let config: Config =
         serde_json::from_str(&config_text).expect("Failed to parse x-clang-tidy.json");
 
+    let mut compiler_extra_args : Vec<String> = Vec::new();
+    // find --target= argument
+    if let Some(target_arg) = extra_args.iter().find(|arg| arg.starts_with("--target=")) {
+        compiler_extra_args.push(target_arg.clone());
+    }
+    // find --config= argument
+    if let Some(config_arg) = extra_args.iter().find(|arg| arg.starts_with("--config=")) {
+        compiler_extra_args.push(config_arg.clone());
+    }
+
     // Get GCC system include paths
-    let include_paths = extract_gcc_includes(gcc_path)?;
+    let include_paths = extract_gcc_includes(gcc_path, &compiler_extra_args)?;
 
     let clang_tidy_args = match config.filter_args {
         Some(filter_args) => {
@@ -172,11 +182,12 @@ fn is_cpp_compiler(compiler_path: &str) -> bool {
     compiler_lower.contains("g++") || compiler_lower.contains("c++")
 }
 
-fn extract_gcc_includes(gcc: &str) -> anyhow::Result<Vec<String>> {
+fn extract_gcc_includes(gcc: &str, extra_args: &[String]) -> anyhow::Result<Vec<String>> {
     let is_cpp = is_cpp_compiler(gcc);
     let lang_flag = if is_cpp { "-xc++" } else { "-xc" };
     // Run gcc -xc -E -v -
     let output = Command::new(gcc)
+        .args(extra_args)
         .args([lang_flag, "-E", "-v", "-"])
         .stdin(Stdio::null())
         .output()
