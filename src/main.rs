@@ -116,7 +116,7 @@ fn _main() -> anyhow::Result<()> {
     }
 
     // Get GCC system include paths
-    let include_paths = extract_gcc_includes(gcc_path, &compiler_extra_args)?;
+    let include_paths = extract_compiler_includes(gcc_path, &compiler_extra_args)?;
 
     let clang_tidy_args = match config.filter_args {
         Some(filter_args) => {
@@ -182,7 +182,7 @@ fn is_cpp_compiler(compiler_path: &str) -> bool {
     compiler_lower.contains("g++") || compiler_lower.contains("c++")
 }
 
-fn extract_gcc_includes(gcc: &str, extra_args: &[String]) -> anyhow::Result<Vec<String>> {
+fn extract_compiler_includes(gcc: &str, extra_args: &[String]) -> anyhow::Result<Vec<String>> {
     let is_cpp = is_cpp_compiler(gcc);
     let lang_flag = if is_cpp { "-xc++" } else { "-xc" };
     // Run gcc -xc -E -v -
