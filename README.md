@@ -7,7 +7,7 @@ It reads configuration from a JSON file, auto-detects required include paths fro
 
 ## Features
 
-* **Automatic GCC include detection:**
+* **Automatic GCC & Clang include detection:**
   Finds all system and C++ standard library includes used by your cross-compiler (e.g., `arm-none-eabi-gcc` or `arm-none-eabi-g++`).
 * **Configurable extra arguments:**
   Easily specify target triples and custom checks for `clang-tidy`.
@@ -153,7 +153,7 @@ set(CMAKE_CXX_CLANG_TIDY "C:/path/to/x-clang-tidy.exe;C:/gcc-arm-none-eabi/bin/a
 ## How It Works
 
 1. **Reads config:**
-   Loads `x-clang-tidy.json` (or another `.json` you specify).
+   Loads `x-clang-tidy.json` `x-clang-tidy.json.hbt`.
 2. **Detects language:**
    Checks if the compiler name contains `g++`/`c++` to determine C vs C++ mode.
 3. **Extracts includes:**
