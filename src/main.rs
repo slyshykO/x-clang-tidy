@@ -65,7 +65,14 @@ fn is_valid_config_path<T: AsRef<str>>(path: T) -> bool {
 // a helper that return env variables
 handlebars_helper!(hb_env: |name: String| {
     match std::env::var(&name) {
-        Ok(value) => value,
+        Ok(value) => {
+            //check if the value is existing path
+            if std::path::Path::new(&value).exists() {
+                format!("{}", value.replace("\\", "/"))
+            } else {
+                value
+            }
+        },
         Err(e) => format!("{}: {}", name, e),
     }
 });
