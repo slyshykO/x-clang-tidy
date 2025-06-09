@@ -68,7 +68,7 @@ handlebars_helper!(hb_env: |name: String| {
         Ok(value) => {
             //check if the value is existing path
             if std::path::Path::new(&value).exists() {
-                format!("{}", value.replace("\\", "/"))
+                value.replace("\\", "/").to_string()
             } else {
                 value
             }
