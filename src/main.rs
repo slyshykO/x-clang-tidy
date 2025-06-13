@@ -156,9 +156,9 @@ fn _main() -> anyhow::Result<()> {
             .collect::<Vec<_>>(),
     };
 
-    eprintln!("gcc_path: {}", gcc_path);
-    eprintln!("clang_tidy_args: {:?}", clang_tidy_args);
-    eprintln!("conf_additional_path: {:?}", conf_additional_path);
+    eprintln!("compiler path       : {}", gcc_path);
+    eprintln!("clang-tidy args     : {:?}", clang_tidy_args);
+    eprintln!("conf additional path: {:?}", conf_additional_path);
 
     // Build clang-tidy command
     let mut cmd = Command::new(&config.clang_tidy);
