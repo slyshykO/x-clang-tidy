@@ -5,6 +5,8 @@ use std::fs;
 use std::process::{Command, ExitCode, Stdio};
 
 static CWD: OnceCell<std::path::PathBuf> = OnceCell::new();
+const __VERSION: &str = concat!("\0", "Ver.:", env!("_GIT_VERSION"), "\0");
+const _VERSION: &str = env!("_GIT_VERSION");
 
 #[derive(Deserialize)]
 struct Config {
@@ -18,6 +20,14 @@ struct Config {
 
 pub fn cwd() -> &'static std::path::PathBuf {
     CWD.get().expect("CWD not set")
+}
+
+pub(crate) fn app_version() -> String {
+    __VERSION
+        .trim_matches('\0')
+        .strip_prefix("Ver.:")
+        .unwrap_or(_VERSION)
+        .to_string()
 }
 
 fn main() -> ExitCode {
@@ -81,7 +91,7 @@ fn _main() -> anyhow::Result<()> {
     // Usage: x-clang-tidy <path-to-arm-gcc.exe> <clang-tidy-args...>
     let args = std::env::args().collect::<Vec<String>>();
 
-    eprintln!("x-clang-tidy: {}", env!("CARGO_PKG_VERSION"));
+    eprintln!("x-clang-tidy: {}", app_version());
     eprintln!("x-clang-tidy cwd: {}", cwd().display());
 
     let gcc_path = args
