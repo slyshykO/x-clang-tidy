@@ -90,6 +90,7 @@ This approach makes your configuration portable across different machines and CI
 ```json
 {
   "clang-tidy": "C:/LLVM/bin/clang-tidy.exe",
+  "checks":["*"]
   "extra-args": [
     "--target=arm-none-eabi",
     "-Wno-unknown-argument"
@@ -104,6 +105,7 @@ This approach makes your configuration portable across different machines and CI
 ```
 
 * `clang-tidy`: Path to your `clang-tidy` binary.
+* `checks`: Tidy checks (will be passed as `--checks=...`)
 * `extra-args`: Extra arguments (will be passed as `-extra-arg=...`).
 * `filter-args`: Arguments (or argument prefixes) to **remove** from the command line, e.g., toolchain or CPU-specific flags that may break `clang-tidy`.
 
