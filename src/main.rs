@@ -16,6 +16,8 @@ struct Config {
     extra_args: Vec<String>,
     #[serde(rename = "filter-args")]
     filter_args: Option<Vec<String>>,
+
+    checks: Option<Vec<String>>,
 }
 
 pub fn cwd() -> &'static std::path::PathBuf {
@@ -170,8 +172,20 @@ fn _main() -> anyhow::Result<()> {
     eprintln!("clang-tidy args     : {:?}", clang_tidy_args);
     eprintln!("conf additional path: {:?}", conf_additional_path);
 
+    let checks_arg = if let Some(checks) = &config.checks {
+        if !checks.is_empty() {
+            format!("--checks={}", checks.join(","))
+        } else {
+            String::from("--checks=*")
+        }
+    } else {
+        String::from("--checks=*")
+    };
+    eprintln!("clang-tidy checks   : {}", checks_arg);
+
     // Build clang-tidy command
     let mut cmd = Command::new(&config.clang_tidy);
+    cmd.arg(checks_arg);
     for arg in &config.extra_args {
         cmd.arg(format!("-extra-arg={}", arg));
     }
