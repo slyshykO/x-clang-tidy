@@ -36,7 +36,7 @@ fn main() -> ExitCode {
     let cwd_ = match std::env::current_dir() {
         Ok(p) => p,
         Err(e) => {
-            eprintln!("{}", e);
+            eprintln!("{e}");
             return ExitCode::FAILURE;
         }
     };
@@ -47,7 +47,7 @@ fn main() -> ExitCode {
     match _main() {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
-            eprintln!("{}", e);
+            eprintln!("{e}");
             ExitCode::FAILURE
         }
     }
@@ -85,7 +85,7 @@ handlebars_helper!(hb_env: |name: String| {
                 value
             }
         },
-        Err(e) => format!("{}: {}", name, e),
+        Err(e) => format!("{name}: {e}"),
     }
 });
 
@@ -168,9 +168,9 @@ fn _main() -> anyhow::Result<()> {
             .collect::<Vec<_>>(),
     };
 
-    eprintln!("compiler path       : {}", gcc_path);
-    eprintln!("clang-tidy args     : {:?}", clang_tidy_args);
-    eprintln!("conf additional path: {:?}", conf_additional_path);
+    eprintln!("compiler path       : {gcc_path}");
+    eprintln!("clang-tidy args     : {clang_tidy_args:?}");
+    eprintln!("conf additional path: {conf_additional_path:?}");
 
     let checks_arg = if let Some(checks) = &config.checks {
         if !checks.is_empty() {
@@ -181,16 +181,16 @@ fn _main() -> anyhow::Result<()> {
     } else {
         String::from("--checks=*")
     };
-    eprintln!("clang-tidy checks   : {}", checks_arg);
+    eprintln!("clang-tidy checks   : {checks_arg}");
 
     // Build clang-tidy command
     let mut cmd = Command::new(&config.clang_tidy);
     cmd.arg(checks_arg);
     for arg in &config.extra_args {
-        cmd.arg(format!("-extra-arg={}", arg));
+        cmd.arg(format!("-extra-arg={arg}"));
     }
     for path in include_paths {
-        cmd.arg(format!("-extra-arg=-I{}", path));
+        cmd.arg(format!("-extra-arg=-I{path}"));
     }
     for arg in &clang_tidy_args {
         cmd.arg(arg);
