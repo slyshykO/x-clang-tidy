@@ -213,9 +213,7 @@ fn _main() -> anyhow::Result<()> {
                 Err(anyhow::anyhow!("clang-tidy exited with code {}", code))
             }
         }
-        None => {
-            Err(anyhow::anyhow!("clang-tidy terminated by signal"))
-        }
+        None => Err(anyhow::anyhow!("clang-tidy terminated by signal")),
     }
 }
 
