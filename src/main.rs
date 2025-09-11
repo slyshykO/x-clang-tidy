@@ -205,7 +205,18 @@ fn _main() -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("Can't launch `{}`: {}", &config.clang_tidy, e))
         .expect("Failed to execute clang-tidy");
 
-    std::process::exit(status.code().unwrap_or(1));
+    match status.code() {
+        Some(code) => {
+            if code == 0 {
+                Ok(())
+            } else {
+                Err(anyhow::anyhow!("clang-tidy exited with code {}", code))
+            }
+        }
+        None => {
+            Err(anyhow::anyhow!("clang-tidy terminated by signal"))
+        }
+    }
 }
 
 fn is_cpp_compiler(compiler_path: &str) -> bool {
