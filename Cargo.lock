@@ -404,8 +404,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
+name = "wildcard"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9b0540e91e49de3817c314da0dd3bc518093ceacc6ea5327cb0e1eb073e5189"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "x-clang-tidy"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "git-version",
@@ -413,4 +422,5 @@ dependencies = [
  "once_cell",
  "serde",
  "serde_json",
+ "wildcard",
 ]

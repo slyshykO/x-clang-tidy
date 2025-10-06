@@ -146,6 +146,7 @@ fn _main() -> anyhow::Result<()> {
 
             // Create a set of args to filter out, handling both individual args and space-separated options
             let mut filtered_out = std::collections::HashSet::new();
+            let mut filtered_out_patterns = Vec::new();
             for filter_arg in &filter_args {
                 if filter_arg.contains(' ') {
                     // Split space-separated option and add individual parts
@@ -153,12 +154,26 @@ fn _main() -> anyhow::Result<()> {
                     for part in parts {
                         filtered_out.insert(part.to_string());
                     }
+                } else if filter_arg.contains('*') {
+                    filtered_out_patterns.push(filter_arg.to_string());
                 } else {
                     filtered_out.insert(filter_arg.clone());
                 }
             }
 
+            // Filter out args based on exact matches and wildcard patterns
             ea.into_iter()
+                .filter(|arg| {
+                    filtered_out_patterns.iter().all(|pattern| {
+                        match wildcard::WildcardBuilder::new(pattern.as_bytes()).build() {
+                            Ok(wc) => !wc.is_match(arg.as_bytes()),
+                            Err(_) => {
+                                eprintln!("Invalid pattern: {}", pattern);
+                                true
+                            } // If pattern is invalid, skip filtering
+                        }
+                    })
+                })
                 .filter(|arg| !filtered_out.contains(arg))
                 .collect::<Vec<_>>()
         }
