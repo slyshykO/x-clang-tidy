@@ -1,10 +1,10 @@
 use handlebars::{Handlebars, handlebars_helper};
-use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use std::fs;
 use std::process::{Command, ExitCode, Stdio};
+use std::sync::OnceLock;
 
-static CWD: OnceCell<std::path::PathBuf> = OnceCell::new();
+static CWD: OnceLock<std::path::PathBuf> = OnceLock::new();
 const __VERSION: &str = concat!("\0", "Ver.:", env!("_GIT_VERSION"), "\0");
 const _VERSION: &str = env!("_GIT_VERSION");
 
