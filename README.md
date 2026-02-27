@@ -13,6 +13,8 @@ It reads configuration from a JSON file, auto-detects required include paths fro
   Easily specify target triples and custom checks for `clang-tidy`.
 * **Argument filtering:**
   Use `filter-args` to remove problematic arguments (like those not understood by `clang-tidy`).
+* **Source file filtering:**
+  Use `filter-files` to skip running `clang-tidy` for source paths matching wildcard patterns.
 * **Supports both C and C++:**
   Language is auto-detected by the compiler name.
 * **Easy integration:**
@@ -90,7 +92,7 @@ This approach makes your configuration portable across different machines and CI
 ```json
 {
   "clang-tidy": "C:/LLVM/bin/clang-tidy.exe",
-  "checks":["*"]
+  "checks":["*"],
   "extra-args": [
     "--target=arm-none-eabi",
     "-Wno-unknown-argument"
@@ -100,6 +102,11 @@ This approach makes your configuration portable across different machines and CI
     "-specs=nosys.specs",
     "-u _printf_float", 
     "-finline-limit=512"
+  ],
+  "filter-files": [
+    "*/generated/*",
+    "*/third_party/*",
+    "*.pb.c"
   ]
 }
 ```
@@ -108,6 +115,7 @@ This approach makes your configuration portable across different machines and CI
 * `checks`: Tidy checks (will be passed as `--checks=...`)
 * `extra-args`: Extra arguments (will be passed as `-extra-arg=...`).
 * `filter-args`: Arguments (or argument prefixes) to **remove** from the command line, e.g., toolchain or CPU-specific flags that may break `clang-tidy`.
+* `filter-files`: Wildcard patterns for source file paths. If any input source file matches one of these patterns, `x-clang-tidy` exits successfully without running `clang-tidy`.
 
 ---
 

@@ -1,6 +1,7 @@
 use handlebars::{Handlebars, handlebars_helper};
 use serde::Deserialize;
 use std::fs;
+use std::path::Path;
 use std::process::{Command, ExitCode, Stdio};
 use std::sync::OnceLock;
 
@@ -16,6 +17,8 @@ struct Config {
     extra_args: Vec<String>,
     #[serde(rename = "filter-args")]
     filter_args: Option<Vec<String>>,
+    #[serde(rename = "filter-files")]
+    filter_files: Option<Vec<String>>,
 
     checks: Option<Vec<String>>,
 }
@@ -90,15 +93,15 @@ handlebars_helper!(hb_env: |name: String| {
 });
 
 fn _main() -> anyhow::Result<()> {
-    // Usage: x-clang-tidy <path-to-arm-gcc.exe> <clang-tidy-args...>
+    // Usage: x-clang-tidy <path-to-cross-compiler> <clang-tidy-args...>
     let args = std::env::args().collect::<Vec<String>>();
 
     eprintln!("x-clang-tidy: {}", app_version());
     eprintln!("x-clang-tidy cwd: {}", cwd().display());
 
-    let gcc_path = args
+    let cross_compiler_path = args
         .get(1)
-        .expect("First argument should be path to GCC cross-compiler");
+        .expect("First argument should be path to cross-compiler");
     let extra_args: Vec<String> = args[2..].to_vec();
 
     let conf_additional_path = {
@@ -112,6 +115,14 @@ fn _main() -> anyhow::Result<()> {
         v
     };
 
+    let src_files = extra_args
+        .iter()
+        .take_while(|i| *i != "--")
+        .filter(|i| Path::new(i).exists())
+        .filter(|i| !is_valid_config_path(i))
+        .map(|s| s.to_owned())
+        .collect::<Vec<_>>();
+
     // create the handlebars registry
     let mut handlebars = Handlebars::new();
     handlebars.register_helper("env", Box::new(hb_env));
@@ -124,6 +135,23 @@ fn _main() -> anyhow::Result<()> {
     let config: Config =
         serde_json::from_str(&config_text).expect("Failed to parse x-clang-tidy.json");
 
+    // check if any of the source are match with at least one of the filter-files patterns
+    if let Some(filter_files) = &config.filter_files {
+        for src in &src_files {
+            for pattern in filter_files {
+                match wildcard::WildcardBuilder::new(pattern.as_bytes()).build() {
+                    Ok(wc) => {
+                        if wc.is_match(src.as_bytes()) {
+                            println!("Source file `{src}` matches filter pattern `{pattern}`");
+                            return Ok(());
+                        }
+                    }
+                    Err(e) => eprintln!("Invalid pattern `{pattern}`: {e}"),
+                }
+            }
+        }
+    }
+
     let mut compiler_extra_args: Vec<String> = Vec::new();
     // find --target= argument
     if let Some(target_arg) = extra_args.iter().find(|arg| arg.starts_with("--target=")) {
@@ -135,7 +163,7 @@ fn _main() -> anyhow::Result<()> {
     }
 
     // Get GCC system include paths
-    let include_paths = extract_compiler_includes(gcc_path, &compiler_extra_args)?;
+    let include_paths = extract_compiler_includes(cross_compiler_path, &compiler_extra_args)?;
 
     let clang_tidy_args = match config.filter_args {
         Some(filter_args) => {
@@ -183,7 +211,9 @@ fn _main() -> anyhow::Result<()> {
             .collect::<Vec<_>>(),
     };
 
-    eprintln!("compiler path       : {gcc_path}");
+    eprintln!("all args            : {args:?}");
+    eprintln!("compiler path       : {cross_compiler_path}");
+    eprintln!("source files        : {src_files:?}");
     eprintln!("clang-tidy args     : {clang_tidy_args:?}");
     eprintln!("conf additional path: {conf_additional_path:?}");
 
